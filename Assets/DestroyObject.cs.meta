@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 45cf54a884d36204abd34e39531979c1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - prefabBoomPoint: {fileID: 8340880778860273596, guid: d20b12482e3463f45bae4cc64b5136ae, type: 3}
+  - prefabSphere: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
