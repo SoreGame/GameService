@@ -57,6 +57,8 @@
 
 
 ![Alt text](img/hw1_1.png?raw=true "Title")
+![Alt text](img/hw1_2.png?raw=true "Title")
+![Alt text](img/hw1_3.png?raw=true "Title")
 ```py
 
 In [ ]:
