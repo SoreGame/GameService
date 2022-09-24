@@ -198,6 +198,7 @@ public class collorChange : MonoBehaviour
 ![Alt text](img/hw3_1.png?raw=true "Title")
 
 После окончания ввода на сцене появляются объекты (кубы) с некоторой задержкой, которую можно установить в инспекторе 
+
 ![Alt text](img/hw3_2.png?raw=true "Title")
 
 Код для генерации обьектов на сцене (ObjectSpawner.cs)
