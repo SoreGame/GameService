@@ -111,7 +111,7 @@ public class DestroyObject : MonoBehaviour
 #### Создайте три различных примера работы компонента RigidBody?
 
 ##### Пример 2
-Два шара расположены на одтнаковой высоте от "земли", падают с одинаковой скоростью.
+Два шара расположены на одинаковой высоте от "земли", падают с одинаковой скоростью.
 ![Alt text](img/hw2_3.png?raw=true "Title")
 Но один из них обладает как бы большей упркгостю и отскакивает выше другого. Сила отскока утихает со временем.
 ![Alt text](img/hw2_4.png?raw=true "Title")
@@ -143,53 +143,93 @@ public class RepulsWall : MonoBehaviour
 ```
 
 ##### Пример 3
-Два шара расположены на одтнаковой высоте от "земли", падают с одинаковой скоростью.
-![Alt text](img/hw2_3.png?raw=true "Title")
-Но один из них обладает как бы большей упркгостю и отскакивает выше другого. Сила отскока утихает со временем.
-![Alt text](img/hw2_4.png?raw=true "Title")
+Стартовое положение объектов на сцене
+![Alt text](img/hw2_5.png?raw=true "Title")
+
+Полсе того как куб упадет на землю, стена мешающая движению шара исчезнет
+![Alt text](img/hw2_6.png?raw=true "Title")
+
+После того как шар попадет на цветную платформу он начнет отскакивать от нее.
+![Alt text](img/hw2_7.png?raw=true "Title")
+
+Каждое касание шара с платформой делает платформу все более и более красной.
+![Alt text](img/hw2_8.png?raw=true "Title")
 
 
-## Задание 3
-### Какова роль параметра Lr? Ответьте на вопрос, приведите пример выполнения кода, который подтверждает ваш ответ. В качестве эксперимента можете изменить значение параметра.
+Код для исчезновения стены (DeleteWall.cs)
+```csharp
+public class DeleteWall : MonoBehaviour
+{
 
-- Перечисленные в этом туториале действия могут быть выполнены запуском на исполнение скрипт-файла, доступного [в репозитории](https://github.com/Den1sovDm1triy/hfss-scripting/blob/main/ScreatingSphereInAEDT.py).
-- Для запуска скрипт-файла откройте Ansys Electronics Desktop. Перейдите во вкладку [Automation] - [Run Script] - [Выберите файл с именем ScreatingSphereInAEDT.py из репозитория].
+    public GameObject deleteWall;
 
-```py
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag == "Sphere") 
+        {
+            Destroy(deleteWall);
+        }
+    }
+}
+```
 
-import ScriptEnv
-ScriptEnv.Initialize("Ansoft.ElectronicsDesktop")
-oDesktop.RestoreWindow()
-oProject = oDesktop.NewProject()
-oProject.Rename("C:/Users/denisov.dv/Documents/Ansoft/SphereDIffraction.aedt", True)
-oProject.InsertDesign("HFSS", "HFSSDesign1", "HFSS Terminal Network", "")
-oDesign = oProject.SetActiveDesign("HFSSDesign1")
-oEditor = oDesign.SetActiveEditor("3D Modeler")
-oEditor.CreateSphere(
-	[
-		"NAME:SphereParameters",
-		"XCenter:="		, "0mm",
-		"YCenter:="		, "0mm",
-		"ZCenter:="		, "0mm",
-		"Radius:="		, "1.0770329614269mm"
-	], 
-)
+Код изменения цвета платформы (collorChange.cs.)
+```csharp
+public class collorChange : MonoBehaviour
+{
+
+    public float value;
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag == "Sphere") 
+        {
+            this.gameObject.GetComponent<Renderer>().material.SetColor("_Color",Color.Lerp(this.GetComponent<Renderer>().materials[0].color, Color.red, value));
+        }
+    }
+}
 
 ```
 
+## Задание 3
+### Реализуйте на сцене генерацию n кубиков. Число n вводится пользователем после старта сцены.
+
+После старта сцены в левом нижнем углу существует поле для ввода числогого значения 
+![Alt text](img/hw3_1.png?raw=true "Title")
+
+После окончания ввода на сцене появляются объекты (кубы) с некоторой задержкой, которую можно установить в инспекторе 
+![Alt text](img/hw3_2.png?raw=true "Title")
+
+Код для генерации обьектов на сцене (ObjectSpawner.cs)
+
+```csharp
+public class ObjectSpawner : MonoBehaviour
+{
+    public string cubeCount;
+    public float pauseTime;
+    public GameObject spawnObject;
+    public GameObject inputField;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        waiter();
+    }
+
+    public async void waiter()
+    {
+        cubeCount = inputField.GetComponent<Text>().text;
+
+        for (int i = 0; i < int.Parse(cubeCount); i++)
+        {
+            Instantiate(spawnObject, this.transform.position, this.transform.rotation);
+            await Task.Delay(TimeSpan.FromSeconds(pauseTime));
+        }
+    }
+}
+```
 ## Выводы
 
-Абзац умных слов о том, что было сделано и что было узнано.
-
-| Plugin | README |
-| ------ | ------ |
-| Dropbox | [plugins/dropbox/README.md][PlDb] |
-| GitHub | [plugins/github/README.md][PlGh] |
-| Google Drive | [plugins/googledrive/README.md][PlGd] |
-| OneDrive | [plugins/onedrive/README.md][PlOd] |
-| Medium | [plugins/medium/README.md][PlMe] |
-| Google Analytics | [plugins/googleanalytics/README.md][PlGa] |
-
-## Powered by
-
-**BigDigital Team: Denisov | Fadeev | Panov**
+Ознакомился с основными функциями Unity и взаимодействием с объектами внутри редактора.
+Создал примеры взаимодействия RigitBody на сцене
+Реализовал генерацию обьектов после старта сцены, освовываясь на введеных "игроком" данных   

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class RepulsWall : MonoBehaviour
 {
-    // Start is called before the first frame update
     Rigidbody rb;
     public float repulceForece;
     void Start()
@@ -13,11 +12,6 @@ public class RepulsWall : MonoBehaviour
         {
             rb = GetComponent<Rigidbody>();
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
     }
 
     private void OnCollisionEnter(Collision collision)

@@ -28,12 +28,4 @@ public class ObjectSpawner : MonoBehaviour
             await Task.Delay(TimeSpan.FromSeconds(pauseTime));
         }
     }
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-     
 }
