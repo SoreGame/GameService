@@ -1,4 +1,4 @@
-# АНАЛИЗ ДАННЫХ И ИСКУССТВЕННЫЙ ИНТЕЛЛЕКТ [in GameDev]
+# Основы работы с Unity
 Отчет по лабораторной работе #1 выполнил(а):
 - Соломеин Егор Александрович 
 - РИ300013
@@ -55,60 +55,99 @@
 11) При столкновении Cube должен менять свой цвет на зелёный, а при
 завершении столкновения обратно на красный.
 
-
+Сцена начинается вот с такого расположения объектов на сцене
 ![Alt text](img/hw1_1.png?raw=true "Title")
+При касании сферы с кубом, материал куба менят цвет на зеленый
 ![Alt text](img/hw1_2.png?raw=true "Title")
+После падения куба на землю, сфера взрывается и разлетается на маленькие сферы
 ![Alt text](img/hw1_3.png?raw=true "Title")
-```py
 
-In [ ]:
-#Import the required modules, numpy for calculation, and Matplotlib for drawing
-import numpy as np
-import matplotlib.pyplot as plt
-#This code is for jupyter Notebook only
-%matplotlib inline
 
-# define data, and change list to array
-x = [3,21,22,34,54,34,55,67,89,99]
-x = np.array(x)
-y = [2,22,24,65,79,82,55,130,150,199]
-y = np.array(y)
+Код для взрывва сферы (DestroyObject.cs): 
 
-#Show the effect of a scatter plot
-plt.scatter(x,y)
+```csharp
+
+public class DestroyObject : MonoBehaviour
+{
+    public float radius = 5.0f;
+    public float force = 10.0f;
+
+    public GameObject prefabBoomPoint;
+    public GameObject prefabSphere;
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.name == "Icosphere")
+        {
+            Destroy(collision.gameObject);
+            Vector3 boomPosition = collision.gameObject.transform.position;
+            Instantiate(prefabBoomPoint, collision.transform.position, collision.transform.rotation);
+            Instantiate(prefabSphere, collision.transform.position, collision.transform.rotation);
+            Collider[] colliders = Physics.OverlapSphere(boomPosition, radius);
+            foreach (Collider hit in colliders)
+            {
+                Rigidbody rb = GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.AddExplosionForce(force, boomPosition, 3.0f);
+                }
+            }
+        }
+    }
+}
 
 ```
-
-- Определите связанные функции. Функция модели: определяет модель линейной регрессии wx+b. Функция потерь: функция потерь среднеквадратичной ошибки. Функция оптимизации: метод градиентного спуска для нахождения частных производных w и b.
-
 
 ## Задание 2
-### Должна ли величина loss стремиться к нулю при изменении исходных данных? Ответьте на вопрос, приведите пример выполнения кода, который подтверждает ваш ответ.
+### Продемонстрируйте на сцене в Unity следующее:
+#### Что произойдёт с координатами объекта, если он перестанет быть дочерним?
 
-- Перечисленные в этом туториале действия могут быть выполнены запуском на исполнение скрипт-файла, доступного [в репозитории](https://github.com/Den1sovDm1triy/hfss-scripting/blob/main/ScreatingSphereInAEDT.py).
-- Для запуска скрипт-файла откройте Ansys Electronics Desktop. Перейдите во вкладку [Automation] - [Run Script] - [Выберите файл с именем ScreatingSphereInAEDT.py из репозитория].
+Это координаты объекта до того как он стал дочерним
+![Alt text](img/hw2_1.png?raw=true "Title")
 
-```py
+После того как он стал дочерним, его координаты изменились. На координаты относительто родительского объекта. Как бы берут точку начала отсчета от позиции родительского объекта.
+![Alt text](img/hw2_2.png?raw=true "Title")
 
-import ScriptEnv
-ScriptEnv.Initialize("Ansoft.ElectronicsDesktop")
-oDesktop.RestoreWindow()
-oProject = oDesktop.NewProject()
-oProject.Rename("C:/Users/denisov.dv/Documents/Ansoft/SphereDIffraction.aedt", True)
-oProject.InsertDesign("HFSS", "HFSSDesign1", "HFSS Terminal Network", "")
-oDesign = oProject.SetActiveDesign("HFSSDesign1")
-oEditor = oDesign.SetActiveEditor("3D Modeler")
-oEditor.CreateSphere(
-	[
-		"NAME:SphereParameters",
-		"XCenter:="		, "0mm",
-		"YCenter:="		, "0mm",
-		"ZCenter:="		, "0mm",
-		"Radius:="		, "1.0770329614269mm"
-	], 
-)
+#### Создайте три различных примера работы компонента RigidBody?
 
+##### Пример 2
+Два шара расположены на одтнаковой высоте от "земли", падают с одинаковой скоростью.
+![Alt text](img/hw2_3.png?raw=true "Title")
+Но один из них обладает как бы большей упркгостю и отскакивает выше другого. Сила отскока утихает со временем.
+![Alt text](img/hw2_4.png?raw=true "Title")
+
+Код отскока (только) от горизонтальной поверхкности (RepulsWall.cs)
+
+```csharp
+public class RepulsWall : MonoBehaviour
+{
+	Rigidbody rb;
+	public float repulceForece;
+	void Start()
+	{
+		if (rb == null)
+		{
+			rb = GetComponent<Rigidbody>();
+		}
+	}
+	private void OnCollisionEnter(Collision collision)
+	{
+		if (collision.gameObject.tag == "Wall")
+		{
+			Debug.Log(rb.velocity);
+			rb.velocity = new Vector3(0, collision.relativeVelocity.y*repulceForece*0.1f, 0);
+			Debug.Log("Posle " +rb.velocity);
+		}
+	}
+}
 ```
+
+##### Пример 3
+Два шара расположены на одтнаковой высоте от "земли", падают с одинаковой скоростью.
+![Alt text](img/hw2_3.png?raw=true "Title")
+Но один из них обладает как бы большей упркгостю и отскакивает выше другого. Сила отскока утихает со временем.
+![Alt text](img/hw2_4.png?raw=true "Title")
+
 
 ## Задание 3
 ### Какова роль параметра Lr? Ответьте на вопрос, приведите пример выполнения кода, который подтверждает ваш ответ. В качестве эксперимента можете изменить значение параметра.
