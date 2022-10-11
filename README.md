@@ -1,5 +1,5 @@
 # Основы работы с Unity
-Отчет по лабораторной работе #1 выполнил(а):
+Отчет по лабораторной работе #2 выполнил(а):
 - Соломеин Егор Александрович 
 - РИ300013
 Отметка о выполнении заданий (заполняется студентом):
@@ -28,208 +28,178 @@
 - Задание 2.
 - Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
 - Задание 3.
-- Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
+- Ссылка на реферат по теме.
 - Выводы.
 - ✨Magic ✨
 
 ## Цель работы
-ознакомиться с основными функциями Unity и взаимодействием с объектами внутри редактора.
+Создание интерактивного приложения и изучение принципов интеграции в него игровых сервисов.
 
 ## Задание 1
-### Пошагово выполнить каждый пункт раздела "ход работы" с описанием и примерами реализации задач
+### По теме видео практических работ 1-5 повторить реализацию игры на Unity. Привести описание выполненных действий.
+
 Ход работы:
 
 1) Создать новый проект из шаблона 3D – Core;
 2) Проверить, что настроена интеграция редактора Unity и Visual Studio Code
-(пункты 8-10 введения);
-3) Создать объект Plane;
-4) Создать объект Cube;
-5) Создать объект Sphere;
-6) Установить компонент Sphere Collider для объекта Sphere;
-7) Настроить Sphere Collider в роли триггера;
-8) Объект куб перекрасить в красный цвет;
-9) Добавить кубу симуляцию физики, при это куб не должен проваливаться
-под Plane;
-10) Написать скрипт, который будет выводить в консоль сообщение о том,
-что объект Sphere столкнулся с объектом Cube;
-11) При столкновении Cube должен менять свой цвет на зелёный, а при
-завершении столкновения обратно на красный.
-
-Сцена начинается вот с такого расположения объектов на сцене
+3) Установить необходимые ассет-паки из Asset Unity Store;
 ![Alt text](img/hw1_1.png?raw=true "Title")
-При касании сферы с кубом, материал куба менят цвет на зеленый
+![Alt text](img/hw1_5.png?raw=true "Title")
+
+4) Настроить Animated Controller для дракона на сцене
 ![Alt text](img/hw1_2.png?raw=true "Title")
-После падения куба на землю, сфера взрывается и разлетается на маленькие сферы
+
+
+5) Создать объект Sphere и Plane на сцене, добавив текстуры;
+6) Изменить проекцию камеры на Orthographic;
 ![Alt text](img/hw1_3.png?raw=true "Title")
 
-
-Код для взрывва сферы (DestroyObject.cs): 
-
+7) Создать скрипт "EnemyDragon" для управления драконом;
 ```csharp
 
-public class DestroyObject : MonoBehaviour
+public class EnemyDragon : MonoBehaviour
 {
-    public float radius = 5.0f;
-    public float force = 10.0f;
-
-    public GameObject prefabBoomPoint;
-    public GameObject prefabSphere;
-
-    private void OnCollisionEnter(Collision collision)
+    // Start is called before the first frame update
+    public GameObject dragonEggPregab;
+    public float speed = 1;
+    public float timeBetweeenEggDrops = 1f;
+    public float leftRightDistance = 10f;
+    public float chanceDirectional = 0.1f;
+    void Start()
     {
-        if (collision.gameObject.name == "Icosphere")
+        Invoke("DroppEgg", 2f);
+    }
+
+    void DroppEgg()
+    {
+        Vector3 myVector = new Vector3(0f, 5f, 0f);
+        GameObject egg = Instantiate<GameObject>(dragonEggPregab);
+        egg.transform.position = transform.position + myVector;
+        Invoke("DroppEgg", timeBetweeenEggDrops);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        Vector3 pos = transform.position;
+        pos.x += speed * Time.deltaTime;
+        transform.position = pos;
+
+        if (pos.x < -leftRightDistance)
         {
-            Destroy(collision.gameObject);
-            Vector3 boomPosition = collision.gameObject.transform.position;
-            Instantiate(prefabBoomPoint, collision.transform.position, collision.transform.rotation);
-            Instantiate(prefabSphere, collision.transform.position, collision.transform.rotation);
-            Collider[] colliders = Physics.OverlapSphere(boomPosition, radius);
-            foreach (Collider hit in colliders)
-            {
-                Rigidbody rb = GetComponent<Rigidbody>();
-                if (rb != null)
-                {
-                    rb.AddExplosionForce(force, boomPosition, 3.0f);
-                }
-            }
+            speed = Mathf.Abs(speed);
+        }
+        else if (pos.x > leftRightDistance)
+        {
+            speed = -Mathf.Abs(speed);
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (Random.value < chanceDirectional)
+        {
+            speed *= -1;
         }
     }
 }
+```
+DroppEgg - Метод, отвечающий за спавн яиц
+Update - внутри метода описано измение движения дракона при попадании в крайнии точки
+FixedUpdate - внутри метода описано случайное изменение направления движения 
 
+7.2) Установлены значения для скрипта "EnemyDragon" в инспекторе 
+![Alt text](img/hw1_4.png?raw=true "Title")
+
+8) Создать скрипт "DragonEgg" для управления партиклами яйца;
+```csharp
+public class DragonEgg : MonoBehaviour
+{
+    // Start is called before the first frame update
+    public static float bottomY = -30f;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        ParticleSystem ps = GetComponent<ParticleSystem>();
+        var em = ps.emission;
+        em.enabled = true;
+
+        Renderer rend;
+        rend = GetComponent<Renderer>();
+        rend.enabled = false;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (transform.position.y < bottomY)
+        {
+            Destroy(this.gameObject);
+        }
+    }
+}
+```
+
+9) Создать скрипт "DragonPicker" для создания щитов на сцене
+```csharp
+public class DragonPicker : MonoBehaviour
+{
+    // Start is called before the first frame update
+    public GameObject energyShieldPrefab;
+    public int numEnergyShield = 3;
+    public float energyShieldBottomY = -6f;
+    public float energyShieldRadius = 1.5f;
+
+    void Start()
+    {
+        for (int i = 1; i <= numEnergyShield; i++)
+        {
+            GameObject tShieldGo = Instantiate<GameObject>(energyShieldPrefab);
+            tShieldGo.transform.position = new Vector3(0, energyShieldBottomY, 0);
+            tShieldGo.transform.localScale = new Vector3(1*i, 1*i, 1*i);
+        }
+    }
+
+}
 ```
 
 ## Задание 2
-### Продемонстрируйте на сцене в Unity следующее:
-#### Что произойдёт с координатами объекта, если он перестанет быть дочерним?
+### В проект, выполненный в предыдущем задании, добавить систему проверкитого, что SDK подключен (доступен в режиме онлайн и отвечает на запросы);
 
-Это координаты объекта до того как он стал дочерним
+Меняем платформу билда с Windows, Mac, Linux на WebGL.
+Добавляем открытую сцену в билд.
 ![Alt text](img/hw2_1.png?raw=true "Title")
 
-После того как он стал дочерним, его координаты изменились. На координаты относительто родительского объекта. Как бы берут точку начала отсчета от позиции родительского объекта.
-![Alt text](img/hw2_2.png?raw=true "Title")
-
-#### Создайте три различных примера работы компонента RigidBody?
-
-##### Пример 2
-Два шара расположены на одинаковой высоте от "земли", падают с одинаковой скоростью.
-![Alt text](img/hw2_3.png?raw=true "Title")
-Но один из них обладает как бы большей упркгостю и отскакивает выше другого. Сила отскока утихает со временем.
-![Alt text](img/hw2_4.png?raw=true "Title")
-
-Код отскока (только) от горизонтальной поверхкности (RepulsWall.cs)
-
-```csharp
-public class RepulsWall : MonoBehaviour
-{
-	Rigidbody rb;
-	public float repulceForece;
-	void Start()
-	{
-		if (rb == null)
-		{
-			rb = GetComponent<Rigidbody>();
-		}
-	}
-	private void OnCollisionEnter(Collision collision)
-	{
-		if (collision.gameObject.tag == "Wall")
-		{
-			Debug.Log(rb.velocity);
-			rb.velocity = new Vector3(0, collision.relativeVelocity.y*repulceForece*0.1f, 0);
-			Debug.Log("Posle " +rb.velocity);
-		}
-	}
-}
-```
-
-##### Пример 3
-Стартовое положение объектов на сцене
-![Alt text](img/hw2_5.png?raw=true "Title")
-
-Полсе того как куб упадет на землю, стена мешающая движению шара исчезнет
-![Alt text](img/hw2_6.png?raw=true "Title")
-
-После того как шар попадет на цветную платформу он начнет отскакивать от нее.
-![Alt text](img/hw2_7.png?raw=true "Title")
-
-Каждое касание шара с платформой делает платформу все более и более красной.
-![Alt text](img/hw2_8.png?raw=true "Title")
-
-
-Код для исчезновения стены (DeleteWall.cs)
-```csharp
-public class DeleteWall : MonoBehaviour
-{
-
-    public GameObject deleteWall;
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag == "Sphere") 
-        {
-            Destroy(deleteWall);
-        }
-    }
-}
-```
-
-Код изменения цвета платформы (collorChange.cs.)
-```csharp
-public class collorChange : MonoBehaviour
-{
-
-    public float value;
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag == "Sphere") 
-        {
-            this.gameObject.GetComponent<Renderer>().material.SetColor("_Color",Color.Lerp(this.GetComponent<Renderer>().materials[0].color, Color.red, value));
-        }
-    }
-}
+Формируется билд игры с html-файлом в который мы интегрируем SDK 
+Вставляем следующие строчки кода...
+```html
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <script>
+      var sdk = null;
+      YaGames.init().then(ysdk => {
+        console.log('Yandex SDK initialized');
+        sdk = ysdk;
+        sdk.adv.showFullscreenAdv()
+    });
+    </script>
 
 ```
+
+Готовый билд собираем в ZIP-файл и заливаем на Яндекс.Игры.
+Получаем ссылку на черновик игры, запускаем и проверяем логи.
+![Alt text](img/hw2_1.png?raw=true "Title")
+
+SDK успешно установлен в билд игры!
+
 
 ## Задание 3
-### Реализуйте на сцене генерацию n кубиков. Число n вводится пользователем после старта сцены.
+### Произвести сравнительный анализ игровых сервисов Яндекс Игрыи VK Game - Реферат
 
-После старта сцены в левом нижнем углу существует поле для ввода числогого значения 
-![Alt text](img/hw3_1.png?raw=true "Title")
+Ссылка на реферат на Яендкс Диске:
+https://disk.yandex.ru/d/kOOYCPPXrFenXA
 
-После окончания ввода на сцене появляются объекты (кубы) с некоторой задержкой, которую можно установить в инспекторе 
-![Alt text](img/hw3_2.png?raw=true "Title")
 
-Код для генерации обьектов на сцене (ObjectSpawner.cs)
-
-```csharp
-public class ObjectSpawner : MonoBehaviour
-{
-    public string cubeCount;
-    public float pauseTime;
-    public GameObject spawnObject;
-    public GameObject inputField;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        waiter();
-    }
-
-    public async void waiter()
-    {
-        cubeCount = inputField.GetComponent<Text>().text;
-
-        for (int i = 0; i < int.Parse(cubeCount); i++)
-        {
-            Instantiate(spawnObject, this.transform.position, this.transform.rotation);
-            await Task.Delay(TimeSpan.FromSeconds(pauseTime));
-        }
-    }
-}
-```
 ## Выводы
 
-Ознакомился с основными функциями Unity и взаимодействием с объектами внутри редактора.
-Создал примеры взаимодействия RigitBody на сцене
-Реализовал генерацию обьектов после старта сцены, освовываясь на введеных "игроком" данных   
+Создал основу для игры, разоьрался с принципами интеграции в приложение игровых сервисов.
+Провел сравнительный анализ платформ Яндекс.Игры и Vk.Games
