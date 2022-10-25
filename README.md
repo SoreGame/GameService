@@ -24,99 +24,77 @@
 Структура отчета
 
 - Задание 1.
-- Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
+- Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик
 - Задание 2.
-- Код реализации выполнения задания. Визуализация результатов выполнения (если применимо).
+    Практическая работа «Уменьшение жизни. Добавление текстур».
+    Практическая работа «Структурирование исходных файлов в папке».
 - Задание 3.
-- Ссылка на реферат по теме.
+    Практическая работа «Интеграция игровых сервисов в готовое приложение».
 - Выводы.
 - ✨Magic ✨
 
 ## Цель работы
-Создание интерактивного приложения и изучение принципов интеграции в него игровых сервисов.
+Интеграция интерфейса пользователя в разрабатываемое интерактивное приложение.
 
 ## Задание 1
-### По теме видео практических работ 1-5 повторить реализацию игры на Unity. Привести описание выполненных действий.
+### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик:
+1. Практическая работа «Реализация механизма ловли объектов».
+2. Практическая работа «Реализация графического интерфейса с добавлением счетчика очков».
+
 
 Ход работы:
 
-1) Создать новый проект из шаблона 3D – Core;
-2) Проверить, что настроена интеграция редактора Unity и Visual Studio Code
-3) Установить необходимые ассет-паки из Asset Unity Store;
-![Alt text](img/2/hw1_1.png?raw=true "Title")
-![Alt text](img/2/hw1_5.png?raw=true "Title")
+1) Создаем новый скрипт "EnergyShield" для управления щитом.
 
-4) Настроить Animated Controller для дракона на сцене
-![Alt text](img/2/hw1_2.png?raw=true "Title")
-
-
-5) Создать объект Sphere и Plane на сцене, добавив текстуры;
-6) Изменить проекцию камеры на Orthographic;
-![Alt text](img/2/hw1_3.png?raw=true "Title")
-
-7) Создать скрипт "EnemyDragon" для управления драконом;
 ```csharp
 
-public class EnemyDragon : MonoBehaviour
+public class EnergyShield : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public GameObject dragonEggPregab;
-    public float speed = 1;
-    public float timeBetweeenEggDrops = 1f;
-    public float leftRightDistance = 10f;
-    public float chanceDirectional = 0.1f;
-    void Start()
-    {
-        Invoke("DroppEgg", 2f);
-    }
+    public TextMeshProUGUI scoreGT;
 
-    void DroppEgg()
+    private void Start()
     {
-        Vector3 myVector = new Vector3(0f, 5f, 0f);
-        GameObject egg = Instantiate<GameObject>(dragonEggPregab);
-        egg.transform.position = transform.position + myVector;
-        Invoke("DroppEgg", timeBetweeenEggDrops);
+        GameObject ScoreGO = GameObject.Find("Score");
+        scoreGT = ScoreGO.GetComponent<TextMeshProUGUI>();
+        scoreGT.text = "0";
     }
-
     // Update is called once per frame
     void Update()
     {
-        Vector3 pos = transform.position;
-        pos.x += speed * Time.deltaTime;
-        transform.position = pos;
-
-        if (pos.x < -leftRightDistance)
-        {
-            speed = Mathf.Abs(speed);
-        }
-        else if (pos.x > leftRightDistance)
-        {
-            speed = -Mathf.Abs(speed);
-        }
+        Vector3 mousePos2D = Input.mousePosition;
+        mousePos2D.z = -Camera.main.transform.position.z;
+        Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
+        Vector3 pos = this.transform.position;
+        pos.x = mousePos3D.x;
+        this.transform.position = pos;
     }
 
-    private void FixedUpdate()
+    private void OnCollisionEnter(Collision coll)
     {
-        if (Random.value < chanceDirectional)
+        GameObject Collided = coll.gameObject;
+        if (Collided.tag == "Dragon Egg") 
         {
-            speed *= -1;
+            Destroy(Collided);
         }
+        int score = int.Parse(scoreGT.text);
+        score += 1;
+        scoreGT.text = score.ToString();
     }
 }
 ```
-DroppEgg - Метод, отвечающий за спавн яиц
-Update - внутри метода описано измение движения дракона при попадании в крайнии точки
-FixedUpdate - внутри метода описано случайное изменение направления движения 
 
-7.2) Установлены значения для скрипта "EnemyDragon" в инспекторе 
-![Alt text](img/2/hw1_4.png?raw=true "Title")
+2) Реализуем ловлю объектов "DragonEgg", для этого добавляем в скрипт новый метод.
 
-8) Создать скрипт "DragonEgg" для управления партиклами яйца;
 ```csharp
 public class DragonEgg : MonoBehaviour
 {
     // Start is called before the first frame update
     public static float bottomY = -30f;
+
+    void Start()
+    {
+        
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -135,13 +113,65 @@ public class DragonEgg : MonoBehaviour
         if (transform.position.y < bottomY)
         {
             Destroy(this.gameObject);
+            DragonPicker apScript = Camera.main.GetComponent<DragonPicker>();
+            apScript.DragonEggDestroy();
         }
     }
 }
 ```
+3) Добавляем элемент Canvas и Text, редактируем их под Main Camera для лучшего вида.
 
-9) Создать скрипт "DragonPicker" для создания щитов на сцене
+![Alt text](img/3/hw1_4.png?raw=true "Title")
+
+4) Создаем счётчик очков, для этого нужно добавить новый метод в скрипт "EnergyShield".
+
 ```csharp
+
+public class EnergyShield : MonoBehaviour
+{
+    public TextMeshProUGUI scoreGT;
+
+    private void Start()
+    {
+        GameObject ScoreGO = GameObject.Find("Score");
+        scoreGT = ScoreGO.GetComponent<TextMeshProUGUI>();
+        scoreGT.text = "0";
+    }
+    // Update is called once per frame
+    void Update()
+    {
+        Vector3 mousePos2D = Input.mousePosition;
+        mousePos2D.z = -Camera.main.transform.position.z;
+        Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
+        Vector3 pos = this.transform.position;
+        pos.x = mousePos3D.x;
+        this.transform.position = pos;
+    }
+
+    private void OnCollisionEnter(Collision coll)
+    {
+        GameObject Collided = coll.gameObject;
+        if (Collided.tag == "Dragon Egg") 
+        {
+            Destroy(Collided);
+        }
+        int score = int.Parse(scoreGT.text);
+        score += 1;
+        scoreGT.text = score.ToString();
+    }
+}
+```
+
+## Задание 2
+### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик:
+3. Практическая работа «Уменьшение жизни. Добавление текстур».
+4. Практическая работа «Структурирование исходных файлов в папке».
+
+Ход работы:
+
+1) В скрипте "DragonPicker" добавим условие при котором игра будет перезапускаться.
+```csharp
+
 public class DragonPicker : MonoBehaviour
 {
     // Start is called before the first frame update
@@ -150,56 +180,71 @@ public class DragonPicker : MonoBehaviour
     public float energyShieldBottomY = -6f;
     public float energyShieldRadius = 1.5f;
 
+    public List<GameObject> shieldList;
+
     void Start()
     {
+        shieldList = new List<GameObject>();
         for (int i = 1; i <= numEnergyShield; i++)
         {
             GameObject tShieldGo = Instantiate<GameObject>(energyShieldPrefab);
             tShieldGo.transform.position = new Vector3(0, energyShieldBottomY, 0);
             tShieldGo.transform.localScale = new Vector3(1*i, 1*i, 1*i);
+            shieldList.Add(tShieldGo);
         }
     }
 
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    public void DragonEggDestroy() 
+    {
+        GameObject[] tDragonEggArray = GameObject.FindGameObjectsWithTag("Dragon Egg");
+        foreach (GameObject tGO in tDragonEggArray) 
+        {
+            Destroy(tGO);
+        }
+        int shieldIndex = shieldList.Count - 1;
+        GameObject tShieldGo = shieldList[shieldIndex];
+        shieldList.RemoveAt(shieldIndex);
+        Destroy(tShieldGo);
+
+        if (shieldList.Count == 0) 
+        {
+            SceneManager.LoadScene("_0Scene");
+        }
+    }
 }
-```
-
-## Задание 2
-### В проект, выполненный в предыдущем задании, добавить систему проверкитого, что SDK подключен (доступен в режиме онлайн и отвечает на запросы);
-
-Меняем платформу билда с Windows, Mac, Linux на WebGL.
-Добавляем открытую сцену в билд.
-![Alt text](img/2/hw2_1.png?raw=true "Title")
-
-Формируется билд игры с html-файлом в который мы интегрируем SDK 
-Вставляем следующие строчки кода...
-```html
-    <script src="https://yandex.ru/games/sdk/v2"></script>
-    <script>
-      var sdk = null;
-      YaGames.init().then(ysdk => {
-        console.log('Yandex SDK initialized');
-        sdk = ysdk;
-        sdk.adv.showFullscreenAdv()
-    });
-    </script>
 
 ```
 
-Готовый билд собираем в ZIP-файл и заливаем на Яндекс.Игры.
-Получаем ссылку на черновик игры, запускаем и проверяем логи.
-![Alt text](img/2/hw2_2.png?raw=true "Title")
-
-SDK успешно установлен в билд игры!
-
+Так же добавляем префаб горы на сцену 
+(на скриншотах будет видно)
 
 ## Задание 3
-### Произвести сравнительный анализ игровых сервисов Яндекс Игрыи VK Game - Реферат
+### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик:
+5. Практическая работа «Интеграция игровых сервисов в готовое приложение».
 
-Ссылка на реферат на Яендкс Диске:
-https://disk.yandex.ru/d/kOOYCPPXrFenXA
+1) Импортируем плагин от Яндекс.Игр для корректной инициализации Yandex.SDK
+2) Архивируем билд нашей игры в zip-формат и загружаем в Яндекс.Консоль
+3) После проверки нашего архива можно перейти на черновик и убедиться, что все работает корректно.
 
 
 ## Выводы
 
-Создал основу для игры, разоьрался с принципами интеграции в приложение игровых сервисов.
-Провел сравнительный анализ платформ Яндекс.Игры и Vk.Games
+Мы добавили на локацию скайбокс, гору, счетчик..
+![Alt text](img/3/hw1_1.png?raw=true "Title")
+
+При ловле счетчик увеличивается на +1
+![Alt text](img/3/hw1_2.png?raw=true "Title")
+
+Если не ловить яйца, щиты будут уменьшатся
+![Alt text](img/3/hw1_3.png?raw=true "Title")
+
+Интеграция интерфейса пользователя в разрабатываемое интерактивное приложение.
+
+Повторно интегрировал сервисы яндекса в игру, на этот раз с использованием плагина
+в интерактивное приложение.
