@@ -7,6 +7,8 @@ public class DragonEgg : MonoBehaviour
     // Start is called before the first frame update
     public static float bottomY = -30f;
 
+    public AudioSource audioSource;
+
     void Start()
     {
         
@@ -21,6 +23,9 @@ public class DragonEgg : MonoBehaviour
         Renderer rend;
         rend = GetComponent<Renderer>();
         rend.enabled = false;
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.Play();
     }
 
     // Update is called once per frame

@@ -1,5 +1,5 @@
 # Основы работы с Unity
-Отчет по лабораторной работе #2 выполнил(а):
+Отчет по лабораторной работе #4 выполнил(а):
 - Соломеин Егор Александрович 
 - РИ300013
 Отметка о выполнении заданий (заполняется студентом):
@@ -24,72 +24,100 @@
 Структура отчета
 
 - Задание 1.
-- Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик
+- Используя видео-материалы практических работ 1-5 повторить реализацию приведенного ниже функционала:
+        1 Практическая работа «Создание анимации объектов на сцене»
+        2 Практическая работа «Создание стартовой сцены и переключение между ними»
+        3 Практическая работа «Доработка меню и функционала с остановкой игры»
+        4 Практическая работа «Добавление звукового сопровождения в игре»
+        5 Практическая работа «Добавление персонажа и сборка сцены для публикации на web-ресурсе»
 - Задание 2.
-    Практическая работа «Уменьшение жизни. Добавление текстур».
-    Практическая работа «Структурирование исходных файлов в папке».
+    Привести описание того, как происходит сборка проекта проекта под другие платформы. Какие могут быть особенности?
 - Задание 3.
-    Практическая работа «Интеграция игровых сервисов в готовое приложение».
+    Добавить в меню Option возможность изменения громкости (от 0 до 100%) фоновой музыки в игре.
 - Выводы.
 - ✨Magic ✨
 
 ## Цель работы
-Интеграция интерфейса пользователя в разрабатываемое интерактивное приложение.
+Подготовить разрабатываемое интерактивное приложение к сборке и публикации.
 
-## Задание 1
-### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик:
-1. Практическая работа «Реализация механизма ловли объектов».
-2. Практическая работа «Реализация графического интерфейса с добавлением счетчика очков».
-
+## Задание 1
+### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик
 
 Ход работы:
 
-1) Создаем новый скрипт "EnergyShield" для управления щитом.
+1) Создал новую сцену _0Scene, разместил объекты на сцене, импортировал новые ассеты 
 
+Результат работы в игре:
+![Alt text](img/4/hw1_1.png?raw=true "Title")
+
+Результат работы на сцене:
+![Alt text](img/4/hw1_2.png?raw=true "Title")
+
+2) Реализовал анимацию облака в главном меню:
+    -Создал контроллер анимации и самуу анимацию через "ключи" в "Animation"
+
+3) Создал кнопки в главном меню. Для их работы написал скрипт "MainMenu"
 ```csharp
-
-public class EnergyShield : MonoBehaviour
+public class MainMenu : MonoBehaviour
 {
-    public TextMeshProUGUI scoreGT;
-
-    private void Start()
+    public void PlayGame() 
     {
-        GameObject ScoreGO = GameObject.Find("Score");
-        scoreGT = ScoreGO.GetComponent<TextMeshProUGUI>();
-        scoreGT.text = "0";
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        Vector3 mousePos2D = Input.mousePosition;
-        mousePos2D.z = -Camera.main.transform.position.z;
-        Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
-        Vector3 pos = this.transform.position;
-        pos.x = mousePos3D.x;
-        this.transform.position = pos;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
-    private void OnCollisionEnter(Collision coll)
+    public void QuitGame() 
     {
-        GameObject Collided = coll.gameObject;
-        if (Collided.tag == "Dragon Egg") 
-        {
-            Destroy(Collided);
-        }
-        int score = int.Parse(scoreGT.text);
-        score += 1;
-        scoreGT.text = score.ToString();
+        Application.Quit();
     }
 }
-```
+```  
 
-2) Реализуем ловлю объектов "DragonEgg", для этого добавляем в скрипт новый метод.
+4) Добавил меню настроек:
+![Alt text](img/4/hw1_3.png?raw=true "Title")
+
+Настроил систему переходов в меню. К настройкам и обратно через кнопки "Setting" и "Back"
+
+5) Реализовал механику паузы, создал скрипт "Pause"
 
 ```csharp
-public class DragonEgg : MonoBehaviour
+public class Pause : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public static float bottomY = -30f;
+    private bool paused = false;
+    public GameObject panel;
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space)) 
+        {
+            if (!paused)
+            {
+                Time.timeScale = 0;
+                paused = true;
+                panel.SetActive(true);
+            }
+            else 
+            {
+                Time.timeScale = 1;
+                paused = false;
+                panel.SetActive(false);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape)) 
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+            }
+        }
+    }
+}
+```  
+Реализация в игре: 
+![Alt text](img/4/hw1_5.png?raw=true "Title")
+
+6) Добавил в игру звуковые эффекты ловли яйца и его падения на землю и музыка в меню. 
+Для этого изменил скрипты "DragonEgg" и "EnergyShield"
+
+Добалены строки про AudioSource, на примере одного из скриптов:
+```csharp
+    public AudioSource audioSource;
 
     void Start()
     {
@@ -105,146 +133,59 @@ public class DragonEgg : MonoBehaviour
         Renderer rend;
         rend = GetComponent<Renderer>();
         rend.enabled = false;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (transform.position.y < bottomY)
-        {
-            Destroy(this.gameObject);
-            DragonPicker apScript = Camera.main.GetComponent<DragonPicker>();
-            apScript.DragonEggDestroy();
-        }
+        audioSource = GetComponent<AudioSource>();
+        audioSource.Play();
     }
-}
 ```
-3) Добавляем элемент Canvas и Text, редактируем их под Main Camera для лучшего вида.
 
-![Alt text](img/3/hw1_4.png?raw=true "Title")
+7) Добавлена модель мага с анимацией Idle
 
-4) Создаем счётчик очков, для этого нужно добавить новый метод в скрипт "EnergyShield".
+![Alt text](img/4/hw1_6.png?raw=true "Title")
 
-```csharp
-
-public class EnergyShield : MonoBehaviour
-{
-    public TextMeshProUGUI scoreGT;
-
-    private void Start()
-    {
-        GameObject ScoreGO = GameObject.Find("Score");
-        scoreGT = ScoreGO.GetComponent<TextMeshProUGUI>();
-        scoreGT.text = "0";
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        Vector3 mousePos2D = Input.mousePosition;
-        mousePos2D.z = -Camera.main.transform.position.z;
-        Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
-        Vector3 pos = this.transform.position;
-        pos.x = mousePos3D.x;
-        this.transform.position = pos;
-    }
-
-    private void OnCollisionEnter(Collision coll)
-    {
-        GameObject Collided = coll.gameObject;
-        if (Collided.tag == "Dragon Egg") 
-        {
-            Destroy(Collided);
-        }
-        int score = int.Parse(scoreGT.text);
-        score += 1;
-        scoreGT.text = score.ToString();
-    }
-}
-```
 
 ## Задание 2
-### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик:
-3. Практическая работа «Уменьшение жизни. Добавление текстур».
-4. Практическая работа «Структурирование исходных файлов в папке».
+###  Привести описание того, как происходит сборка проекта проекта под другие платформы. Какие могут быть особенности?
 
-Ход работы:
+Под различные платформы необходимо установить дополнительные файлы в юнити
+Под различные платформы используются различные SDK и на выходе мы получаем различную структуру проекта и различные исполняемые файлы. 
 
-1) В скрипте "DragonPicker" добавим условие при котором игра будет перезапускаться.
+![Alt text](img/4/hw2_1.png?raw=true "Title")
+![Alt text](img/4/hw2_2.png?raw=true "Title")
+
+
+## Задание 3
+### Добавить в меню Option возможность изменения громкости (от 0 до 100%) фоновой музыки в игре:
+
+1) Написан скрипт "SoundSetting"
+
 ```csharp
-
-public class DragonPicker : MonoBehaviour
+public class SoundSetting : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public GameObject energyShieldPrefab;
-    public int numEnergyShield = 3;
-    public float energyShieldBottomY = -6f;
-    public float energyShieldRadius = 1.5f;
-
-    public List<GameObject> shieldList;
-
+    private AudioSource audioSource;
+    private float musicVolume = 1f;
     void Start()
     {
-        shieldList = new List<GameObject>();
-        for (int i = 1; i <= numEnergyShield; i++)
-        {
-            GameObject tShieldGo = Instantiate<GameObject>(energyShieldPrefab);
-            tShieldGo.transform.position = new Vector3(0, energyShieldBottomY, 0);
-            tShieldGo.transform.localScale = new Vector3(1*i, 1*i, 1*i);
-            shieldList.Add(tShieldGo);
-        }
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        audioSource.volume = musicVolume;
     }
 
-    public void DragonEggDestroy() 
+    public void SetVolume(float vol) 
     {
-        GameObject[] tDragonEggArray = GameObject.FindGameObjectsWithTag("Dragon Egg");
-        foreach (GameObject tGO in tDragonEggArray) 
-        {
-            Destroy(tGO);
-        }
-        int shieldIndex = shieldList.Count - 1;
-        GameObject tShieldGo = shieldList[shieldIndex];
-        shieldList.RemoveAt(shieldIndex);
-        Destroy(tShieldGo);
-
-        if (shieldList.Count == 0) 
-        {
-            SceneManager.LoadScene("_0Scene");
-        }
+        musicVolume = vol;
     }
 }
-
 ```
 
-Так же добавляем префаб горы на сцену 
-(на скриншотах будет видно)
-
-## Задание 3
-### Используя видео-материалы практических работ 1-5 повторить реализацию игровых механик:
-5. Практическая работа «Интеграция игровых сервисов в готовое приложение».
-
-1) Импортируем плагин от Яндекс.Игр для корректной инициализации Yandex.SDK
-2) Архивируем билд нашей игры в zip-формат и загружаем в Яндекс.Консоль
-3) После проверки нашего архива можно перейти на черновик и убедиться, что все работает корректно.
+Также добавлен слайдер в меню настроек:
+![Alt text](img/4/hw1_3.png?raw=true "Title")
 
 
 ## Выводы
 
-Мы добавили на локацию скайбокс, гору, счетчик..
-![Alt text](img/3/hw1_1.png?raw=true "Title")
-
-При ловле счетчик увеличивается на +1
-![Alt text](img/3/hw1_2.png?raw=true "Title")
-
-Если не ловить яйца, щиты будут уменьшатся
-![Alt text](img/3/hw1_3.png?raw=true "Title")
-
-Интеграция интерфейса пользователя в разрабатываемое интерактивное приложение.
-
-Повторно интегрировал сервисы яндекса в игру, на этот раз с использованием плагина
-в интерактивное приложение.
+Подготовил проект к сборке и публикации: удалил неиспользуемые файлы добавленных ассетов, добавлена музыка и моделька мага в игру, также реализовано меню.
